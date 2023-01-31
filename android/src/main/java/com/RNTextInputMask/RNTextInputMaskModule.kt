@@ -18,38 +18,46 @@ import java.lang.NullPointerException
 class RNTextInputMaskModule(private val context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
     override fun getName() = "RNTextInputMask"
 
+    private var mask: Mask? = null
+
     @ReactMethod
-    fun mask(maskString: String?,
-             inputValue: String,
+    fun mask(primaryFormat: String, inputValue: String,
              autocomplete: Boolean,
              promise: Promise) {
-        val mask = Mask(maskString!!)
-        val result = mask.apply(
-            CaretString(
-                inputValue,
-                inputValue.length,
-                FORWARD(autocomplete)
+        mask?.let {
+            val result = it.apply(
+                CaretString(
+                    inputValue,
+                    inputValue.length,
+                    FORWARD(autocomplete)
+                )
             )
-        )
-        val output: String = result.formattedText.string
-        promise.resolve(output)
+            val output: String = result.formattedText.string
+            promise.resolve(output)
+            return@mask
+        }
+
+        promise.resolve(inputValue)
     }
 
     @ReactMethod
-    fun unmask(maskString: String?,
-               inputValue: String,
+    fun unmask(primaryFormat: String, inputValue: String,
                autocomplete: Boolean,
                promise: Promise) {
-        val mask = Mask(maskString!!)
-        val result = mask.apply(
-            CaretString(
-                inputValue,
-                inputValue.length,
-                FORWARD(autocomplete)
+        mask?.let {
+            val result = it.apply(
+                CaretString(
+                    inputValue,
+                    inputValue.length,
+                    FORWARD(autocomplete)
+                )
             )
-        )
-        val output: String = result.extractedValue
-        promise.resolve(output)
+            val output: String = result.extractedValue
+            promise.resolve(output)
+            return@unmask
+        }
+        promise.resolve(inputValue)
+
     }
 
     @ReactMethod
@@ -71,6 +79,9 @@ class RNTextInputMaskModule(private val context: ReactApplicationContext) : Reac
                         ?: throw IllegalArgumentException("isOptional is required for notation")
                 )
             }
+
+            this.mask = Mask(primaryFormat, customNotations ?: emptyList())
+
             val affinityCalculationStrategy = options.getString("affinityCalculationStrategy")?.let { AffinityCalculationStrategy.valueOf(it) }
             val autocomplete = options.boolean("autocomplete")
             val autoskip = options.boolean("autoskip")

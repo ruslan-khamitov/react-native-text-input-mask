@@ -10,9 +10,14 @@ import InputMask
 
 @objcMembers
 open class RNMask : NSObject {
-    public static func maskValue(text: String, format: String, autcomplete: Bool) -> String {
-        let mask : Mask = try! Mask.getOrCreate(withFormat: format)
+    private(set) var mask: Mask? = nil
 
+    public func setMask(format: String, customNotations: [Notation]) {
+        self.mask = try! Mask.getOrCreate(withFormat: format, customNotations: customNotations)
+    }
+
+    public func maskValue(text: String, format: String, autcomplete: Bool) -> String {
+        guard let mask = self.mask else { return text }
         let result: Mask.Result = mask.apply(
             toText: CaretString(
                 string: text,
@@ -24,8 +29,8 @@ open class RNMask : NSObject {
         return result.formattedText.string
     }
 
-    public static func unmaskValue(text: String, format: String, autocomplete: Bool) -> String {
-        let mask : Mask = try! Mask.getOrCreate(withFormat: format)
+    public func unmaskValue(text: String, format: String, autocomplete: Bool) -> String {
+        guard let mask = self.mask else { return text }
 
         let result: Mask.Result = mask.apply(
             toText: CaretString(

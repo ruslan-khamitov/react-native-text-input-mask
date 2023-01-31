@@ -17,18 +17,19 @@ class TextInputMask: NSObject, RCTBridgeModule, MaskedTextFieldDelegateListener 
 
     var bridge: RCTBridge!
     var masks: [String: MaskedTextFieldDelegate] = [:]
+    let rnmask = RNMask()
 
     var listeners: [String: MaskedTextFieldDelegateListener] = [:]
 
     @objc(mask:inputValue:autocomplete:resolver:rejecter:)
     func mask(mask: String, inputValue: String, autocomplete: Bool, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        let output = RNMask.maskValue(text: inputValue, format: mask, autcomplete: autocomplete)
+        let output = self.rnmask.maskValue(text: inputValue, format: mask, autcomplete: autocomplete)
         resolve(output)
     }
 
     @objc(unmask:inputValue:autocomplete:resolver:rejecter:)
     func unmask(mask: String, inputValue: String, autocomplete: Bool, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        let output = RNMask.unmaskValue(text: inputValue, format: mask, autocomplete: autocomplete)
+        let output = self.rnmask.unmaskValue(text: inputValue, format: mask, autocomplete: autocomplete)
         resolve(output)
     }
 
@@ -45,6 +46,8 @@ class TextInputMask: NSObject, RCTBridgeModule, MaskedTextFieldDelegateListener 
                 let rightToLeft = options["rightToLeft"] as? Bool ?? false
                 var affinityCalculationStrategy = AffinityCalculationStrategy.forString(rawValue: options["affinityCalculationStrategy"] as? String)
                 
+                self.rnmask.setMask(format: mask, customNotations: customNotations)
+
                 let maskedDelegate = MaskedTextFieldDelegate(primaryFormat: mask, autocomplete: autocomplete, autoskip: autoskip, affineFormats: affineFormats, customNotations: customNotations) { (_, value, complete) in
                     // trigger onChange directly to avoid trigger a second evaluation in native code (causes issue with some input masks like [00] {/} [00]
                     let textField = textView as! UITextField
